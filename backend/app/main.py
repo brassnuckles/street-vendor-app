@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from pathlib import Path
 from app.database import engine, Base, get_db
 from app.models import Vendor, Product, Customer, Order, Payment
-from app.routers import vendors, products, customers, orders, payments, auth, uploads, notifications, reviews, favorites
+from app.routers import vendors, products, customers, orders, payments, auth, uploads, notifications, reviews, favorites, admin
 from app.config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -38,6 +38,7 @@ app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(reviews.router, prefix="/api/reviews", tags=["reviews"])
 app.include_router(favorites.router, prefix="/api/favorites", tags=["favorites"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 upload_dir = Path("uploads")
 upload_dir.mkdir(exist_ok=True)
