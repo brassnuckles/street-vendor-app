@@ -1,22 +1,19 @@
-# Street Vendor App - Beginner's Deployment Guide
+# Street Vendor App - NAS Deployment Guide (Zoraxy)
 
-**This guide assumes you have ZERO experience with VPS deployment. We'll go step by step.**
+**This guide walks you through deploying to your Ugreen NAS using Zoraxy as the reverse proxy.**
 
 ---
 
 ## 📚 Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Part 1: Get Your VPS](#part-1-get-your-vps)
-3. [Part 2: Connect to VPS](#part-2-connect-to-vps)
-4. [Part 3: Install Docker](#part-3-install-docker)
-5. [Part 4: Setup Your App](#part-4-setup-your-app)
-6. [Part 5: Configure Environment](#part-5-configure-environment)
-7. [Part 6: Start Services](#part-6-start-services)
-8. [Part 7: Setup Domain](#part-7-setup-domain)
-9. [Part 8: Get SSL Certificate](#part-8-get-ssl-certificate)
-10. [Part 9: Verify Everything Works](#part-9-verify-everything-works)
-11. [Troubleshooting](#troubleshooting)
+2. [Part 1: Connect to NAS](#part-1-connect-to-nas)
+3. [Part 2: Clone Your App](#part-2-clone-your-app)
+4. [Part 3: Configure Environment](#part-3-configure-environment)
+5. [Part 4: Start Docker Services](#part-4-start-docker-services)
+6. [Part 5: Configure Zoraxy](#part-5-configure-zoraxy)
+7. [Part 6: Verify Everything Works](#part-6-verify-everything-works)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -24,130 +21,60 @@
 
 Before starting, you need:
 
-1. **A VPS** (Virtual Private Server)
-   - Recommended: DigitalOcean, Linode, or Vultr
-   - Minimum specs: Ubuntu 22.04, 2GB RAM, 2 CPU cores, 50GB storage
-   - Cost: ~$6-12/month
+1. **Ugreen NAS** (already have it! ✅)
+   - Docker installed ✅
+   - Zoraxy installed ✅
 
-2. **A Domain Name**
-   - Recommended: Namecheap, GoDaddy, or Google Domains
-   - Cost: ~$10-15/year
+2. **Domain Name**
+   - You have: `elote.littleshit.org` ✅
 
 3. **Stripe Account** (for payments)
    - Go to: https://dashboard.stripe.com
    - Get your API keys (we'll use these later)
 
-4. **Git Account** (optional but recommended)
-   - For storing your code
+4. **Your NAS IP Address**
+   - You have: `192.168.86.47` ✅
 
 ---
 
-## PART 1: Get Your VPS
+## PART 1: Connect to NAS
 
-### Step 1.1: Choose a VPS Provider
+### Step 1.1: SSH into Your NAS
 
-**DigitalOcean (Easiest for beginners):**
-1. Go to https://digitalocean.com
-2. Sign up with your email
-3. Click "Create" → "Droplets"
-4. Choose:
-   - Region: Pick closest to you
-   - Operating System: **Ubuntu 22.04 LTS**
-   - Plan: **$6/month Basic** (enough for testing)
-   - Hostname: `street-vendor-app`
-5. Click "Create Droplet"
-6. Wait 2-3 minutes for it to boot
-
-**You should see:**
-- A droplet running Ubuntu 22.04
-- An IP address (like `192.168.1.100`)
-
----
-
-## PART 2: Connect to VPS
-
-### Step 2.1: Get Terminal Access
-
-**On Windows:**
-1. Download PuTTY: https://www.putty.org/
-2. Open PuTTY
-3. Paste your VPS IP in "Host Name"
-4. Click "Open"
-5. Username: `root`
-6. Password: Check your email from DigitalOcean
-
-**On Mac/Linux:**
+**On Windows PowerShell:**
 ```bash
-ssh root@your_vps_ip_address
+ssh root@192.168.86.47
 # Enter password when prompted
 ```
 
+**On Mac/Linux:**
+```bash
+ssh root@192.168.86.47
+```
+
 **You should see:**
 ```
-Welcome to Ubuntu 22.04
-root@street-vendor-app:~#
+Welcome to your NAS
+root@nas:~#
 ```
 
-✅ **Checkpoint:** You're now inside your VPS!
+✅ **Checkpoint:** You're connected to your NAS!
 
 ---
 
-## PART 3: Install Docker
+## PART 2: Clone Your App
 
-### Step 3.1: Copy-Paste This Command
-
-Paste this entire command into your terminal:
-
-```bash
-curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
-```
-
-**Wait for it to finish** (takes 2-3 minutes).
-
-You should see:
-```
-Successfully added user docker to group docker.
-```
-
-### Step 3.2: Install Docker Compose
-
-Paste this command:
-
-```bash
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose && sudo chmod +x /usr/local/bin/docker-compose
-```
-
-### Step 3.3: Verify Installation
-
-Type this to check both installed correctly:
-
-```bash
-docker --version && docker-compose --version
-```
-
-You should see version numbers like:
-```
-Docker version 24.0.0
-Docker Compose version 2.20.0
-```
-
-✅ **Checkpoint:** Docker is installed!
-
----
-
-## PART 4: Setup Your App
-
-### Step 4.1: Create Project Directory
+### Step 2.1: Navigate and Clone
 
 Type these commands one by one:
 
 ```bash
-cd /opt
+cd /mnt/data
 git clone https://github.com/brassnuckles/street-vendor-app.git
 cd street-vendor-app
 ```
 
-If git clone doesn't work, instead do:
+If git doesn't work, install it first:
 
 ```bash
 apt install -y git
@@ -155,28 +82,24 @@ git clone https://github.com/brassnuckles/street-vendor-app.git
 cd street-vendor-app
 ```
 
-### Step 4.2: Create Necessary Directories
+### Step 2.2: Create Necessary Directories
 
 ```bash
 mkdir -p postgres_data
 mkdir -p uploads
-mkdir -p ssl/live/street-vendor.com
-mkdir -p ssl/www
 mkdir -p backups
 chmod 700 postgres_data
 ```
 
-✅ **Checkpoint:** Project structure is ready!
+✅ **Checkpoint:** Project is cloned and ready!
 
 ---
 
-## PART 5: Configure Environment
+## PART 3: Configure Environment
 
-### Step 5.1: Create .env File
+### Step 3.1: Create .env File
 
-This file contains all your secrets. **Do this carefully.**
-
-Type:
+Paste this entire block into your terminal:
 
 ```bash
 cat > .env << 'EOF'
@@ -192,9 +115,8 @@ SECRET_KEY=your-secret-key-must-be-at-least-32-characters-long-change-this
 STRIPE_SECRET_KEY=sk_test_your_key_here
 STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
 
-# Domain and Email
-DOMAIN_NAME=yourdomain.com
-CERT_EMAIL=youremail@gmail.com
+# Domain (Zoraxy will handle SSL)
+DOMAIN_NAME=elote.littleshit.org
 
 # Redis Password
 REDIS_PASSWORD=ChangeThis456!AlsoSecure
@@ -208,22 +130,20 @@ EOF
 
 **Then press ENTER**
 
-### Step 5.2: Edit the .env File
+### Step 3.2: Edit the .env File
 
-**IMPORTANT:** Edit these values with your actual information:
+Edit with real values:
 
 ```bash
 nano .env
 ```
 
-You'll see a text editor. Edit:
+Edit these:
 1. `DB_PASSWORD` - Change to a secure password
 2. `SECRET_KEY` - Generate a random string (minimum 32 chars)
 3. `STRIPE_SECRET_KEY` - Paste your Stripe secret key
 4. `STRIPE_PUBLISHABLE_KEY` - Paste your Stripe publishable key  
-5. `DOMAIN_NAME` - Your domain (e.g., `vendor.example.com`)
-6. `CERT_EMAIL` - Your email for SSL notifications
-7. `REDIS_PASSWORD` - Change to a secure password
+5. `REDIS_PASSWORD` - Change to a secure password
 
 **To save:**
 - Press `Ctrl + X`
@@ -234,19 +154,15 @@ You'll see a text editor. Edit:
 
 ---
 
-## PART 6: Start Services
+## PART 4: Start Docker Services
 
-### Step 6.1: Start the Database
-
-Type:
+### Step 4.1: Start PostgreSQL
 
 ```bash
 docker-compose -f docker-compose.prod.yml up -d postgres
 ```
 
-**Wait 10 seconds**
-
-Check if it started:
+**Wait 10 seconds**, then check:
 
 ```bash
 docker-compose -f docker-compose.prod.yml ps
@@ -254,110 +170,13 @@ docker-compose -f docker-compose.prod.yml ps
 
 You should see `postgres` with status `Up`
 
-### Step 6.2: Start the Web Server
-
-Type:
+### Step 4.2: Start Backend & Redis
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d nginx
+docker-compose -f docker-compose.prod.yml up -d backend redis
 ```
 
 Check status:
-
-```bash
-docker-compose -f docker-compose.prod.yml ps
-```
-
-You should see both `postgres` and `nginx` running
-
-✅ **Checkpoint:** Services are running!
-
----
-
-## PART 7: Setup Domain
-
-### Step 7.1: Point Domain to VPS
-
-1. Go to your domain registrar (Namecheap, GoDaddy, etc.)
-2. Find "DNS" or "Nameservers" settings
-3. Create an **A Record**:
-   - Name: `@` (or leave blank)
-   - Type: `A`
-   - Value: Your VPS IP address
-   - TTL: 3600
-
-4. Create a **CNAME Record** (for www):
-   - Name: `www`
-   - Type: `CNAME`
-   - Value: `yourdomain.com`
-   - TTL: 3600
-
-**Wait 5-10 minutes** for DNS to update.
-
-### Step 7.2: Verify Domain Points to VPS
-
-Type:
-
-```bash
-nslookup yourdomain.com
-```
-
-You should see your VPS IP address.
-
-✅ **Checkpoint:** Domain is configured!
-
----
-
-## PART 8: Get SSL Certificate
-
-### Step 8.1: Generate Certificate
-
-Type:
-
-```bash
-docker-compose -f docker-compose.prod.yml run --rm certbot
-```
-
-**Follow the prompts:**
-- Enter your email
-- Type `y` to agree to terms
-- Type `n` if asked about sharing email
-
-**Wait 1-2 minutes**
-
-You should see:
-```
-Successfully received certificate
-Certificate is saved at /etc/letsencrypt/live/yourdomain.com/fullchain.pem
-```
-
-### Step 8.2: Verify Certificate
-
-Type:
-
-```bash
-ls -la ssl/live/street-vendor.com/
-```
-
-You should see files like `fullchain.pem` and `privkey.pem`
-
-✅ **Checkpoint:** SSL certificate is installed!
-
----
-
-## PART 9: Start Backend & Redis
-
-### Step 9.1: Start All Remaining Services
-
-Type:
-
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Step 9.2: Check Everything is Running
-
-Type:
 
 ```bash
 docker-compose -f docker-compose.prod.yml ps
@@ -368,7 +187,6 @@ You should see:
 NAME                STATUS
 postgres           Up (healthy)
 backend            Up (healthy)
-nginx              Up (healthy)
 redis              Up (healthy)
 ```
 
@@ -376,14 +194,51 @@ redis              Up (healthy)
 
 ---
 
-## PART 10: Verify Everything Works
+## PART 5: Configure Zoraxy
 
-### Step 10.1: Check API Health
+### Step 5.1: Open Zoraxy Dashboard
 
-Type:
+1. Open your browser
+2. Go to: `http://192.168.86.47:7001`
+3. Log in to Zoraxy
 
-```bash
-curl https://yourdomain.com/health
+### Step 5.2: Create Reverse Proxy Entry
+
+1. Click **"Services"** or **"Proxies"**
+2. Click **"Add New Proxy"** or **"+"**
+3. Fill in:
+   - **Name:** `street-vendor-app`
+   - **Listen Port:** `80` (HTTP)
+   - **Backend Host:** `localhost` or `127.0.0.1`
+   - **Backend Port:** `8000`
+   - **Domain:** `elote.littleshit.org`
+
+4. Click **Save**
+
+### Step 5.3: Enable SSL/TLS
+
+1. Select your new proxy (`street-vendor-app`)
+2. Click **Edit** or **Settings**
+3. Look for **SSL/TLS** section
+4. Click **Enable SSL**
+5. Choose **"Let's Encrypt"** or **"Auto-Generate Certificate"**
+6. Enter your email for certificate notifications
+7. Click **Save**
+
+**Wait 1-2 minutes** for the certificate to be generated
+
+✅ **Checkpoint:** Zoraxy is configured!
+
+---
+
+## PART 6: Verify Everything Works
+
+### Step 6.1: Test Your API
+
+Open your browser and go to:
+
+```
+https://elote.littleshit.org/health
 ```
 
 You should see:
@@ -391,31 +246,29 @@ You should see:
 {"status":"healthy","service":"street-vendor-api"}
 ```
 
-### Step 10.2: View Logs
+### Step 6.2: Access API Docs
 
-Check if backend started correctly:
+Go to:
+```
+https://elote.littleshit.org/docs
+```
+
+You should see:
+- Green padlock (secure HTTPS)
+- Swagger API documentation
+- No errors
+
+### Step 6.3: Check Logs
+
+If something doesn't work, check the backend logs:
 
 ```bash
 docker-compose -f docker-compose.prod.yml logs backend | tail -20
 ```
 
-Look for:
-```
-Application startup complete
-```
+Look for `Application startup complete`
 
-### Step 10.3: Access Your App
-
-Open your browser and go to:
-- **API Docs:** `https://yourdomain.com/docs`
-- **API:** `https://yourdomain.com/api/vendors/`
-
-You should see:
-- Green padlock (secure connection)
-- API documentation page
-- No errors
-
-✅ **Checkpoint:** Your app is LIVE!
+✅ **Checkpoint:** Your app is LIVE on your NAS!
 
 ---
 
@@ -423,38 +276,34 @@ You should see:
 
 ### Create Backup Script
 
-Type:
-
 ```bash
-cat > /opt/street-vendor-app/backup.sh << 'EOF'
+cat > /mnt/data/street-vendor-app/backup.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/opt/street-vendor-app/backups"
+BACKUP_DIR="/mnt/data/street-vendor-app/backups"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 BACKUP_FILE="$BACKUP_DIR/backup_$TIMESTAMP.sql.gz"
 
 mkdir -p $BACKUP_DIR
 
-docker-compose -f /opt/street-vendor-app/docker-compose.prod.yml exec -T postgres pg_dump -U street_vendor street_vendor_db | gzip > $BACKUP_FILE
+docker-compose -f /mnt/data/street-vendor-app/docker-compose.prod.yml exec -T postgres pg_dump -U street_vendor street_vendor_db | gzip > $BACKUP_FILE
 
 echo "Backup created: $BACKUP_FILE"
 EOF
 
-chmod +x /opt/street-vendor-app/backup.sh
+chmod +x /mnt/data/street-vendor-app/backup.sh
 ```
 
 ### Schedule Daily Backup
 
-Type:
-
 ```bash
-(crontab -l 2>/dev/null; echo "0 2 * * * /opt/street-vendor-app/backup.sh") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * /mnt/data/street-vendor-app/backup.sh") | crontab -
 ```
 
 This runs backup at 2 AM every day.
 
 ---
 
-## Common Commands Reference
+## Common Commands
 
 **Save these for later:**
 
@@ -462,7 +311,7 @@ This runs backup at 2 AM every day.
 # View all logs
 docker-compose -f docker-compose.prod.yml logs -f
 
-# View specific service logs
+# View backend logs
 docker-compose -f docker-compose.prod.yml logs -f backend
 
 # Stop all services
@@ -471,14 +320,17 @@ docker-compose -f docker-compose.prod.yml stop
 # Restart all services
 docker-compose -f docker-compose.prod.yml restart
 
+# Restart backend only
+docker-compose -f docker-compose.prod.yml restart backend
+
 # Manually backup database
 docker-compose -f docker-compose.prod.yml exec -T postgres pg_dump -U street_vendor street_vendor_db > backup.sql
 
-# View database
+# Connect to database
 docker-compose -f docker-compose.prod.yml exec postgres psql -U street_vendor -d street_vendor_db
 
 # Update code and restart
-cd /opt/street-vendor-app
+cd /mnt/data/street-vendor-app
 git pull
 docker-compose -f docker-compose.prod.yml build
 docker-compose -f docker-compose.prod.yml up -d
@@ -488,7 +340,7 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## Troubleshooting
 
-### Problem: "Connection refused"
+### Problem: "Backend not responding" or "Connection refused"
 
 **Solution:**
 ```bash
@@ -497,16 +349,16 @@ docker-compose -f docker-compose.prod.yml ps
 docker-compose -f docker-compose.prod.yml logs backend
 ```
 
-### Problem: "Certificate error"
+### Problem: "SSL certificate error" in Zoraxy
 
 **Solution:**
-```bash
-# Check certificate exists
-ls -la ssl/live/street-vendor.com/
-
-# If missing, regenerate:
-docker-compose -f docker-compose.prod.yml run --rm certbot
-```
+1. Go back to Zoraxy dashboard
+2. Select your proxy
+3. Check SSL/TLS status
+4. If certificate failed, try regenerating:
+   - Disable SSL
+   - Re-enable SSL
+   - Let it generate a new certificate
 
 ### Problem: "Database won't start"
 
@@ -521,18 +373,18 @@ rm -rf postgres_data/*
 docker-compose -f docker-compose.prod.yml up -d postgres
 ```
 
-### Problem: "Backend not responding"
+### Problem: "Can't reach app at domain"
 
 **Solution:**
 ```bash
-# Check backend logs
-docker-compose -f docker-compose.prod.yml logs backend | tail -50
+# 1. Check backend is running
+docker-compose -f docker-compose.prod.yml ps
 
-# Restart backend
-docker-compose -f docker-compose.prod.yml restart backend
+# 2. Test direct connection to backend
+curl http://localhost:8000/health
 
-# Wait 10 seconds and try again
-curl https://yourdomain.com/health
+# 3. Restart Zoraxy proxy
+# Go to Zoraxy dashboard and disable/enable the proxy
 ```
 
 ### Problem: "Disk space error"
@@ -550,17 +402,16 @@ docker system prune -a
 
 ## Final Checklist
 
-- [ ] VPS created with Ubuntu 22.04
-- [ ] SSH access working
-- [ ] Docker installed
-- [ ] Project cloned
-- [ ] .env file created with real values
+- [ ] Connected to NAS via SSH
+- [ ] Project cloned to `/mnt/data/street-vendor-app`
+- [ ] .env file created with real Stripe keys
 - [ ] PostgreSQL running
-- [ ] Domain pointing to VPS
-- [ ] SSL certificate generated
-- [ ] All services running
-- [ ] API responding at https://yourdomain.com/health
-- [ ] Can access API docs at https://yourdomain.com/docs
+- [ ] Backend running
+- [ ] Redis running
+- [ ] Zoraxy proxy configured for `elote.littleshit.org`
+- [ ] SSL certificate generated in Zoraxy
+- [ ] API responding at `https://elote.littleshit.org/health`
+- [ ] Can access API docs at `https://elote.littleshit.org/docs`
 - [ ] Backups scheduled
 
 ---
@@ -579,20 +430,15 @@ If something doesn't work:
    docker-compose -f docker-compose.prod.yml ps
    ```
 
-3. **Verify domain is pointing to VPS:**
+3. **Test backend directly:**
    ```bash
-   nslookup yourdomain.com
+   curl http://localhost:8000/health
    ```
 
-4. **Test direct connection:**
-   ```bash
-   curl -k https://yourdomain.com/health
-   ```
-
-5. **Check disk space:**
-   ```bash
-   df -h
-   ```
+4. **Check Zoraxy dashboard:**
+   - Open `http://192.168.86.47:7001`
+   - Check proxy status
+   - Check SSL certificate status
 
 If you're still stuck, share the output of:
 ```bash
@@ -605,13 +451,11 @@ docker-compose -f docker-compose.prod.yml logs backend
 
 Once deployed:
 
-1. **Create a vendor account** at `https://yourdomain.com/api/vendors/register`
-2. **Test the API** using the docs at `https://yourdomain.com/docs`
-3. **Setup SSL auto-renewal** (handled automatically)
-4. **Monitor backups** in `/opt/street-vendor-app/backups`
-5. **Update code** with `git pull && docker-compose -f docker-compose.prod.yml up -d`
+1. **Create a vendor account** at `https://elote.littleshit.org/api/vendors/register`
+2. **Test the API** using the docs at `https://elote.littleshit.org/docs`
+3. **Monitor backups** in `/mnt/data/street-vendor-app/backups`
+4. **Update code** with `git pull && docker-compose -f docker-compose.prod.yml up -d`
 
 ---
 
-**Congratulations! Your app is now live on the internet! 🎉**
-
+**Congratulations! Your app is now live on your NAS! 🎉**
