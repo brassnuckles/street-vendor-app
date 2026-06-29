@@ -76,6 +76,17 @@ class ApiClient {
     return response.data;
   }
 
+  // Customers
+  async getCustomer(customerId: number) {
+    const response = await this.client.get(`/customers/${customerId}`);
+    return response.data;
+  }
+
+  async updateCustomer(customerId: number, data: any) {
+    const response = await this.client.put(`/customers/${customerId}`, data);
+    return response.data;
+  }
+
   // Products
   async createProduct(vendorId: number, data: any) {
     const response = await this.client.post('/products', { vendor_id: vendorId, ...data });
