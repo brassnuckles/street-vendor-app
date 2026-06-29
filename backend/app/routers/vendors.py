@@ -1,18 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 from app.database import get_db
 from app.models import Vendor
 from app.schemas import VendorRegister, VendorLogin, VendorUpdate, VendorResponse
+from app.utils import hash_password, verify_password, create_access_token
+from app.routers.auth import get_current_vendor
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
 
 @router.post("/register", response_model=VendorResponse)
 def register_vendor(vendor: VendorRegister, db: Session = Depends(get_db)):
@@ -38,11 +32,12 @@ def login_vendor(vendor: VendorLogin, db: Session = Depends(get_db)):
     if not db_vendor or not verify_password(vendor.password, db_vendor.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    access_token = create_access_token({"sub": str(db_vendor.id), "type": "vendor"})
     return {
         "id": db_vendor.id,
         "email": db_vendor.email,
         "business_name": db_vendor.business_name,
-        "access_token": "temp-token",
+        "access_token": access_token,
         "token_type": "bearer"
     }
 
@@ -54,7 +49,15 @@ def get_vendor(vendor_id: int, db: Session = Depends(get_db)):
     return vendor
 
 @router.put("/{vendor_id}", response_model=VendorResponse)
-def update_vendor(vendor_id: int, vendor_update: VendorUpdate, db: Session = Depends(get_db)):
+def update_vendor(
+    vendor_id: int,
+    vendor_update: VendorUpdate,
+    current_vendor: Vendor = Depends(get_current_vendor),
+    db: Session = Depends(get_db)
+):
+    if current_vendor.id != vendor_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update other vendors")
+
     vendor = db.query(Vendor).filter(Vendor.id == vendor_id).first()
     if not vendor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vendor not found")

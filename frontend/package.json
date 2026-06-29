@@ -27,7 +27,8 @@
     "expo-location": "~16.5.5",
     "@stripe/stripe-react-native": "^0.35.3",
     "expo-camera": "~14.1.2",
-    "react-native-image-crop-picker": "^0.41.4"
+    "react-native-image-crop-picker": "^0.41.4",
+    "@react-native-async-storage/async-storage": "^1.21.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.5",

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.database import engine, Base, get_db
 from app.models import Vendor, Product, Customer, Order, Payment
-from app.routers import vendors, products, customers, orders, payments
+from app.routers import vendors, products, customers, orders, payments, auth
 from app.config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -26,6 +26,7 @@ app.add_middleware(
 def health_check():
     return {"status": "healthy", "service": "street-vendor-api"}
 
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(vendors.router, prefix="/api/vendors", tags=["vendors"])
 app.include_router(products.router, prefix="/api/products", tags=["products"])
 app.include_router(customers.router, prefix="/api/customers", tags=["customers"])
