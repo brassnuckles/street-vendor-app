@@ -5,16 +5,27 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { ActivityIndicator, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 
+// Import all screens
 import { LoginScreen } from './screens/LoginScreen';
 import { RegisterScreen } from './screens/RegisterScreen';
 import { VendorDashboardScreen } from './screens/VendorDashboardScreen';
 import { ProductListScreen } from './screens/ProductListScreen';
 import { ProductDetailScreen } from './screens/ProductDetailScreen';
+import { AddProductScreen } from './screens/AddProductScreen';
+import { EditProductScreen } from './screens/EditProductScreen';
+import { EditProfileScreen } from './screens/EditProfileScreen';
+import { CheckoutScreen } from './screens/CheckoutScreen';
+import { OrderDetailScreen } from './screens/OrderDetailScreen';
+import { VendorMapScreen } from './screens/VendorMapScreen';
+import { UpdateLocationScreen } from './screens/UpdateLocationScreen';
+import { NotificationsScreen } from './screens/NotificationsScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Auth Stack
 const AuthStack = () => (
   <Stack.Navigator
     screenOptions={{
@@ -31,125 +42,156 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
+// Vendor Navigation
 const VendorTabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
-        if (route.name === 'Dashboard') {
-          iconName = focused ? 'home' : 'home-outline';
-        } else if (route.name === 'Orders') {
-          iconName = focused ? 'list' : 'list-outline';
-        } else if (route.name === 'Profile') {
-          iconName = focused ? 'person' : 'person-outline';
-        }
+        let iconName = 'home-outline';
+        if (route.name === 'Dashboard') iconName = focused ? 'home' : 'home-outline';
+        else if (route.name === 'Map') iconName = focused ? 'map' : 'map-outline';
+        else if (route.name === 'Orders') iconName = focused ? 'list' : 'list-outline';
+        else if (route.name === 'Notifications') iconName = focused ? 'notifications' : 'notifications-outline';
+        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
         return <Ionicons name={iconName} size={size} color={color} />;
       },
       tabBarActiveTintColor: '#007AFF',
       tabBarInactiveTintColor: '#999',
-      headerShown: true,
+      headerShown: false,
     })}
   >
     <Tab.Screen
       name="Dashboard"
       component={VendorDashboardScreen}
-      options={{ title: 'My Store' }}
+      options={{ title: 'Store' }}
     />
     <Tab.Screen
       name="Orders"
-      component={ProductListScreen}
+      component={OrderDetailScreen}
       options={{ title: 'Orders' }}
     />
     <Tab.Screen
+      name="Notifications"
+      component={NotificationsScreen}
+      options={{ title: 'Alerts' }}
+    />
+    <Tab.Screen
       name="Profile"
-      component={ProductListScreen}
+      component={EditProfileScreen}
       options={{ title: 'Profile' }}
     />
   </Tab.Navigator>
 );
 
+// Customer Navigation
 const CustomerTabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
-        let iconName;
-        if (route.name === 'Explore') {
-          iconName = focused ? 'search' : 'search-outline';
-        } else if (route.name === 'Orders') {
-          iconName = focused ? 'bag' : 'bag-outline';
-        } else if (route.name === 'Profile') {
-          iconName = focused ? 'person' : 'person-outline';
-        }
+        let iconName = 'home-outline';
+        if (route.name === 'Explore') iconName = focused ? 'search' : 'search-outline';
+        else if (route.name === 'Map') iconName = focused ? 'map' : 'map-outline';
+        else if (route.name === 'Orders') iconName = focused ? 'bag' : 'bag-outline';
+        else if (route.name === 'Notifications') iconName = focused ? 'notifications' : 'notifications-outline';
+        else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
         return <Ionicons name={iconName} size={size} color={color} />;
       },
       tabBarActiveTintColor: '#007AFF',
       tabBarInactiveTintColor: '#999',
-      headerShown: true,
+      headerShown: false,
     })}
   >
     <Tab.Screen
       name="Explore"
       component={ProductListScreen}
-      options={{ title: 'Explore' }}
+      options={{ title: 'Browse' }}
+    />
+    <Tab.Screen
+      name="Map"
+      component={VendorMapScreen}
+      options={{ title: 'Map' }}
     />
     <Tab.Screen
       name="Orders"
-      component={ProductListScreen}
-      options={{ title: 'My Orders' }}
+      component={OrderDetailScreen}
+      options={{ title: 'Orders' }}
+    />
+    <Tab.Screen
+      name="Notifications"
+      component={NotificationsScreen}
+      options={{ title: 'Alerts' }}
     />
     <Tab.Screen
       name="Profile"
-      component={ProductListScreen}
+      component={EditProfileScreen}
       options={{ title: 'Profile' }}
     />
   </Tab.Navigator>
 );
 
+// Vendor Stack with modal screens
 const VendorStack = () => (
   <Stack.Navigator
     screenOptions={{
       headerShown: false,
+      animationEnabled: true,
     }}
   >
-    <Stack.Screen name="VendorTabs" component={VendorTabNavigator} />
-    <Stack.Screen
-      name="AddProduct"
-      component={ProductListScreen}
-      options={{ title: 'Add Product', headerShown: true }}
-    />
-    <Stack.Screen
-      name="EditProduct"
-      component={ProductListScreen}
-      options={{ title: 'Edit Product', headerShown: true }}
-    />
-    <Stack.Screen
-      name="EditVendorProfile"
-      component={ProductListScreen}
-      options={{ title: 'Edit Profile', headerShown: true }}
-    />
+    <Stack.Group>
+      <Stack.Screen name="VendorTabs" component={VendorTabNavigator} />
+    </Stack.Group>
+    <Stack.Group screenOptions={{ presentation: 'modal' }}>
+      <Stack.Screen
+        name="AddProduct"
+        component={AddProductScreen}
+        options={{ headerShown: true, title: 'Add Product' }}
+      />
+      <Stack.Screen
+        name="EditProduct"
+        component={EditProductScreen}
+        options={{ headerShown: true, title: 'Edit Product' }}
+      />
+      <Stack.Screen
+        name="UpdateLocation"
+        component={UpdateLocationScreen}
+        options={{ headerShown: true, title: 'Update Location' }}
+      />
+    </Stack.Group>
   </Stack.Navigator>
 );
 
+// Customer Stack with modal screens
 const CustomerStack = () => (
   <Stack.Navigator
     screenOptions={{
       headerShown: false,
+      animationEnabled: true,
     }}
   >
-    <Stack.Screen name="CustomerTabs" component={CustomerTabNavigator} />
-    <Stack.Screen
-      name="ProductDetail"
-      component={ProductDetailScreen}
-      options={{ title: 'Product Details', headerShown: true }}
-    />
-    <Stack.Screen
-      name="Checkout"
-      component={ProductListScreen}
-      options={{ title: 'Checkout', headerShown: true }}
-    />
+    <Stack.Group>
+      <Stack.Screen name="CustomerTabs" component={CustomerTabNavigator} />
+    </Stack.Group>
+    <Stack.Group screenOptions={{ presentation: 'modal' }}>
+      <Stack.Screen
+        name="ProductDetail"
+        component={ProductDetailScreen}
+        options={{ headerShown: true, title: 'Product' }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{ headerShown: true, title: 'Checkout' }}
+      />
+      <Stack.Screen
+        name="OrderDetail"
+        component={OrderDetailScreen}
+        options={{ headerShown: true, title: 'Order Details' }}
+      />
+    </Stack.Group>
   </Stack.Navigator>
 );
 
+// Root Navigator with Auth State
 const RootNavigator = () => {
   const [state, dispatch] = React.useReducer(
     (prevState, action) => {
@@ -158,21 +200,12 @@ const RootNavigator = () => {
           return {
             ...prevState,
             isLoading: false,
-            isSignout: false,
-            userToken: action.payload.token,
-            userType: action.payload.userType,
-          };
-        case 'SIGN_IN':
-          return {
-            ...prevState,
-            isSignout: false,
             userToken: action.payload.token,
             userType: action.payload.userType,
           };
         case 'SIGN_OUT':
           return {
-            ...prevState,
-            isSignout: true,
+            isLoading: false,
             userToken: null,
             userType: null,
           };
@@ -180,7 +213,6 @@ const RootNavigator = () => {
     },
     {
       isLoading: true,
-      isSignout: false,
       userToken: null,
       userType: null,
     }
