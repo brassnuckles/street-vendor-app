@@ -5,6 +5,7 @@ from app.models import Vendor
 from app.schemas import VendorRegister, VendorLogin, VendorUpdate, VendorResponse
 from app.utils import hash_password, verify_password, create_access_token
 from app.routers.auth import get_current_vendor
+from app.locations import get_vendors_nearby, get_bounding_box
 
 router = APIRouter()
 
@@ -79,20 +80,10 @@ def list_vendors(
     radius_km: float = 10,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Vendor).offset(skip).limit(limit)
-
     if latitude and longitude:
-        from sqlalchemy import and_
-        min_lat = latitude - (radius_km / 111)
-        max_lat = latitude + (radius_km / 111)
-        min_lon = longitude - (radius_km / (111 * __import__('math').cos(__import__('math').radians(latitude))))
-        max_lon = longitude + (radius_km / (111 * __import__('math').cos(__import__('math').radians(latitude))))
-
-        query = query.filter(and_(
-            Vendor.latitude >= min_lat,
-            Vendor.latitude <= max_lat,
-            Vendor.longitude >= min_lon,
-            Vendor.longitude <= max_lon
-        ))
-
-    return query.all()
+        bbox = get_bounding_box(latitude, longitude, radius_km)
+        nearby = get_vendors_nearby(latitude, longitude, radius_km, db)
+        vendors = [v['vendor'] for v in nearby[skip:skip + limit]]
+        return vendors
+    else:
+        return db.query(Vendor).offset(skip).limit(limit).all()
