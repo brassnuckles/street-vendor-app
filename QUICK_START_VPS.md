@@ -18,7 +18,7 @@
 ssh root@your-vps-ip
 
 # Download and run deployment script
-curl -fsSL https://raw.githubusercontent.com/yourusername/street-vendor-app/main/deploy.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/brassnuckles/street-vendor-app/main/deploy.sh | sudo bash
 ```
 
 The script will:
@@ -54,7 +54,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 ### Step 4: Clone Project
 ```bash
 cd /opt
-git clone https://github.com/yourusername/street-vendor-app.git
+git clone https://github.com/brassnuckles/street-vendor-app.git
 cd street-vendor-app
 ```
 

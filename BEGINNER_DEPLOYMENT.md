@@ -143,7 +143,7 @@ Type these commands one by one:
 
 ```bash
 cd /opt
-git clone https://github.com/yourusername/street-vendor-app.git
+git clone https://github.com/brassnuckles/street-vendor-app.git
 cd street-vendor-app
 ```
 
@@ -151,7 +151,7 @@ If git clone doesn't work, instead do:
 
 ```bash
 apt install -y git
-git clone https://github.com/yourusername/street-vendor-app.git
+git clone https://github.com/brassnuckles/street-vendor-app.git
 cd street-vendor-app
 ```
 

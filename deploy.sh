@@ -53,7 +53,7 @@ PROJECT_DIR="/opt/street-vendor-app"
 if [ ! -d "$PROJECT_DIR" ]; then
     mkdir -p $PROJECT_DIR
     cd $PROJECT_DIR
-    git clone https://github.com/yourusername/street-vendor-app.git .
+    git clone https://github.com/brassnuckles/street-vendor-app.git .
     chown -R $SUDO_USER:$SUDO_USER $PROJECT_DIR
     echo -e "${GREEN}✓ Project cloned${NC}"
 else

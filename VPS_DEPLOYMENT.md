@@ -44,7 +44,7 @@ sudo apt install -y git
 ### 2.1 Clone Repository
 ```bash
 cd /opt
-sudo git clone https://github.com/yourusername/street-vendor-app.git
+sudo git clone https://github.com/brassnuckles/street-vendor-app.git
 sudo chown -R $USER:$USER street-vendor-app
 cd street-vendor-app
 ```
