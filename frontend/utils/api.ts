@@ -146,6 +146,62 @@ class ApiClient {
     return response.data;
   }
 
+  // Uploads
+  async uploadProductImage(imageUri: string) {
+    const formData = new FormData();
+    const fileName = imageUri.split('/').pop() || 'image.jpg';
+
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
+
+    formData.append('file', {
+      uri: imageUri,
+      name: fileName,
+      type: 'image/jpeg',
+    } as any);
+
+    const token = await AsyncStorage.getItem('access_token');
+    const response2 = await fetch(`${API_BASE_URL}/uploads/products`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response2.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    return response2.json();
+  }
+
+  async uploadProfileImage(imageUri: string) {
+    const formData = new FormData();
+    const fileName = imageUri.split('/').pop() || 'profile.jpg';
+
+    formData.append('file', {
+      uri: imageUri,
+      name: fileName,
+      type: 'image/jpeg',
+    } as any);
+
+    const token = await AsyncStorage.getItem('access_token');
+    const response = await fetch(`${API_BASE_URL}/uploads/profiles`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    return response.json();
+  }
+
   async logout() {
     await AsyncStorage.removeItem('access_token');
     await AsyncStorage.removeItem('user_type');

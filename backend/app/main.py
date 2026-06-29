@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from pathlib import Path
 from app.database import engine, Base, get_db
 from app.models import Vendor, Product, Customer, Order, Payment
-from app.routers import vendors, products, customers, orders, payments, auth
+from app.routers import vendors, products, customers, orders, payments, auth, uploads
 from app.config import settings
 
 Base.metadata.create_all(bind=engine)
@@ -32,6 +34,11 @@ app.include_router(products.router, prefix="/api/products", tags=["products"])
 app.include_router(customers.router, prefix="/api/customers", tags=["customers"])
 app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
 app.include_router(payments.router, prefix="/api/payments", tags=["payments"])
+app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
+
+upload_dir = Path("uploads")
+upload_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 if __name__ == "__main__":
     import uvicorn
