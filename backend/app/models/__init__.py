@@ -3,6 +3,7 @@ from app.models.product import Product
 from app.models.customer import Customer
 from app.models.order import Order, OrderItem, OrderStatusEnum
 from app.models.payment import Payment, PaymentStatusEnum, PaymentMethodEnum
+from app.models.notification import PushToken, Notification
 
 __all__ = [
     "Vendor",
@@ -15,4 +16,6 @@ __all__ = [
     "Payment",
     "PaymentStatusEnum",
     "PaymentMethodEnum",
+    "PushToken",
+    "Notification",
 ]

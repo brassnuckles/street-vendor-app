@@ -28,7 +28,8 @@
     "@stripe/stripe-react-native": "^0.35.3",
     "expo-camera": "~14.1.2",
     "react-native-image-crop-picker": "^0.41.4",
-    "@react-native-async-storage/async-storage": "^1.21.0"
+    "@react-native-async-storage/async-storage": "^1.21.0",
+    "expo-notifications": "~0.27.1"
   },
   "devDependencies": {
     "@babel/core": "^7.23.5",

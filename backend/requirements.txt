@@ -13,3 +13,4 @@ python-dotenv==1.0.0
 alembic==1.13.1
 geoalchemy2==0.14.1
 cryptography==41.0.7
+requests==2.31.0

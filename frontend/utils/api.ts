@@ -202,6 +202,32 @@ class ApiClient {
     return response.json();
   }
 
+  // Notifications
+  async registerPushToken(token: string) {
+    const response = await this.client.post('/notifications/register-token', { token });
+    return response.data;
+  }
+
+  async getNotifications() {
+    const response = await this.client.get('/notifications');
+    return response.data;
+  }
+
+  async markNotificationAsRead(notificationId: number) {
+    const response = await this.client.put(`/notifications/${notificationId}/read`);
+    return response.data;
+  }
+
+  async markAllAsRead() {
+    const response = await this.client.put('/notifications/mark-all-read');
+    return response.data;
+  }
+
+  async deleteNotification(notificationId: number) {
+    const response = await this.client.delete(`/notifications/${notificationId}`);
+    return response.data;
+  }
+
   async logout() {
     await AsyncStorage.removeItem('access_token');
     await AsyncStorage.removeItem('user_type');
