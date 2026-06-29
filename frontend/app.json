@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Street Vendor",
+    "slug": "street-vendor-app",
+    "version": "1.0.0",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.streetvendor.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.streetvendor.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to upload vendor listings",
+          "cameraPermission": "The app needs camera access to take photos"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysPermission": "Allow Street Vendor to access your location",
+          "locationWhenInUsePermission": "Allow Street Vendor to access your location while using the app"
+        }
+      ]
+    ]
+  }
+}
