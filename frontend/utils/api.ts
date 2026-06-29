@@ -239,6 +239,51 @@ class ApiClient {
     return response.data;
   }
 
+  // Reviews
+  async createReview(productId: number, review: any) {
+    const response = await this.client.post('/reviews', {
+      product_id: productId,
+      ...review,
+    });
+    return response.data;
+  }
+
+  async getProductReviews(productId: number) {
+    const response = await this.client.get(`/reviews/product/${productId}`);
+    return response.data;
+  }
+
+  async markReviewHelpful(reviewId: number) {
+    const response = await this.client.put(`/reviews/${reviewId}/helpful`);
+    return response.data;
+  }
+
+  async deleteReview(reviewId: number) {
+    const response = await this.client.delete(`/reviews/${reviewId}`);
+    return response.data;
+  }
+
+  // Favorites
+  async addFavorite(productId: number) {
+    const response = await this.client.post(`/favorites/${productId}`);
+    return response.data;
+  }
+
+  async removeFavorite(productId: number) {
+    const response = await this.client.delete(`/favorites/${productId}`);
+    return response.data;
+  }
+
+  async getFavorites() {
+    const response = await this.client.get('/favorites');
+    return response.data;
+  }
+
+  async isFavorite(productId: number) {
+    const response = await this.client.get(`/favorites/${productId}/is-favorite`);
+    return response.data;
+  }
+
   async logout() {
     await AsyncStorage.removeItem('access_token');
     await AsyncStorage.removeItem('user_type');
