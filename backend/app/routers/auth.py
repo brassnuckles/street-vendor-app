@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
-from starlette.authentication import HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.utils import hash_password, verify_password, create_access_token, decode_token
@@ -15,7 +14,7 @@ class TokenResponse(BaseModel):
     user_id: int
     user_type: str
 
-def get_current_vendor(credentials: HTTPAuthCredentials = Depends(security), db: Session = Depends(get_db)):
+def get_current_vendor(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
     payload = decode_token(token)
 
@@ -35,7 +34,7 @@ def get_current_vendor(credentials: HTTPAuthCredentials = Depends(security), db:
 
     return vendor
 
-def get_current_customer(credentials: HTTPAuthCredentials = Depends(security), db: Session = Depends(get_db)):
+def get_current_customer(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
     payload = decode_token(token)
 
