@@ -54,7 +54,7 @@ def get_current_customer(credentials: HTTPAuthorizationCredentials = Depends(sec
 
     return customer
 
-def get_current_user(credentials: HTTPAuthCredentials = Depends(security), db: Session = Depends(get_db)):
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)):
     token = credentials.credentials
     payload = decode_token(token)
 
@@ -79,7 +79,7 @@ def get_current_user(credentials: HTTPAuthCredentials = Depends(security), db: S
     return user
 
 @router.post("/refresh")
-def refresh_token(credentials: HTTPAuthCredentials = Depends(security)):
+def refresh_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     payload = decode_token(token)
 
