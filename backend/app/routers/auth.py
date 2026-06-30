@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer
+from starlette.authentication import HTTPAuthCredentials
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.utils import hash_password, verify_password, create_access_token, decode_token
