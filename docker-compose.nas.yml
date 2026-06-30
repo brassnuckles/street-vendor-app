@@ -1,7 +1,20 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  # PostgreSQL Database
+  init:
+    image: alpine:latest
+    container_name: street_vendor_init
+    command: >
+      sh -c "
+      mkdir -p /app/uploads /app/backups &&
+      chown -R 1000:1000 /app/uploads /app/backups &&
+      chmod -R 775 /app/uploads /app/backups
+      "
+    volumes:
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    restart: "no"
+
   postgres:
     image: postgres:15-alpine
     container_name: street_vendor_db
@@ -12,26 +25,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
-    ports:
-      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-street_vendor}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-street_vendor} -d ${DB_NAME:-street_vendor_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
     networks:
       - street_vendor_network
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 2G
-        reservations:
-          cpus: '1'
-          memory: 1G
 
-  # Backend API (FastAPI)
+  redis:
+    image: redis:7-alpine
+    container_name: street_vendor_redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - street_vendor_network
+
   backend:
     build:
       context: ./backend
@@ -53,12 +70,14 @@ services:
     ports:
       - "31073:8000"
     depends_on:
+      init:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -66,47 +85,17 @@ services:
     restart: unless-stopped
     networks:
       - street_vendor_network
+      - proxy
     command: >
       sh -c "python manage_db.py migrate &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 1.5G
-        reservations:
-          cpus: '1'
-          memory: 512M
-
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: street_vendor_redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6380:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - street_vendor_network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
 
 networks:
   street_vendor_network:
     driver: bridge
+  proxy:
+    external: true
